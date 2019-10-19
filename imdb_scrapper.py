@@ -5,10 +5,15 @@ from re import findall
 from typing import Union
 
 
+
 class Movie:
+
+    IMDB_SEARCH_URL = 'https://www.imdb.com/find?ref_=nv_sr_fn&q={}'
+    IMDB_URL = 'https://www.imdb.com{}'
+
     def __init__(self, title, title_url=None, rating=None, avg_time=None, img_url=None, soup=None):
         self.title = title.title()
-        self.title_url = self.get_from_imdb(self.title)
+        self.title_url = title_url #self.get_from_imdb(self.title)
         self.rating = rating
         self.avg_time = avg_time
         self.img_url = img_url
@@ -16,18 +21,19 @@ class Movie:
 
 
     def __repr__(self):
-        return f'{self.title}\nRating: {self.rating}\nAvg time: {self.avg_time}'
+        return f'{self.title}\nRating: {self.rating}\nAvg time: {self.avg_time}\nCover url:{self.img_url}'
 
 
     @staticmethod
     def get_from_imdb(title_to_find) -> Union[str, None]:
-        '''bierze title oddaje url, url przekazac do get_soup_from_url'''
-        title_to_find = 'https://www.imdb.com/find?ref_=nv_sr_fn&q=' + \
-            title_to_find.replace(' ', '+')
+        '''bierze title oddaje url, url do title_url nastepnie przekazac do get_soup_from_url'''
+        
+        title_to_find = Movie.IMDB_SEARCH_URL.format(title_to_find.replace(' ', '+'))
         search = get(title_to_find).text
         soup = BeautifulSoup(search, 'lxml')
         url = soup.find('td', {'result_text'}).a.get('href')
-        return 'https://www.imdb.com' + url
+        print(url)
+        return Movie.IMDB_URL.format(url)
 
 
     def get_soup_from_url(self):
@@ -39,7 +45,7 @@ class Movie:
             self.soup = BeautifulSoup(temp, 'lxml')
         except:
             self.soup = None
-            print("cos nie tak")
+            print("get soup error")
     
     def soup_to_soup(self, soup):
         self.soup = soup
@@ -57,21 +63,31 @@ class Movie:
     def get_avg_time(self):
         time = self.soup.find('time')
         time = findall('\d', time.text)
-        h = int(time[0])*60
-        m = int(''.join(time[1:]))
-        if len(time) == 1:
-            self.avg_time = int(time)
-        elif len(time) == 3:
-            self.avg_time = h + m   
-        self.avg_time = h + m
+        try:
+            h = int(time[0])*60
+            m = int(''.join(time[1:]))
+            if len(time) == 1:
+                self.avg_time = int(time)
+            elif len(time) == 3:
+                self.avg_time = h + m   
+            self.avg_time = h + m
+        except ValueError as e:
+            self.avg_time = None
+            print(f"get_avg_time error:{e}")
+            
+
 
 
     def get_cover(self):
         ''' zwraca url do okladki'''
         title_alt = self.title + ' Poster'
-        cover = self.soup.find('img', {'alt': title_alt})
-        img_url = cover.get('src')
-        self.img_url = img_url
+        try:
+            cover = self.soup.find('img', {'alt': title_alt})
+            img_url = cover.get('src')
+            self.img_url = img_url
+        except AttributeError as e:
+            self.img_url = None
+            print(f"get_cover error {e}")
 
 
 class Series(Movie):
@@ -86,7 +102,8 @@ class Series(Movie):
 
     def __repr__(self):
         return f'{self.title}\nRating: {self.rating}\nNo of seasons: {self.seasons} \
-            \nNo of episodes: {self.episodes}\nEp time: {self.avg_time}'
+            \nNo of episodes: {self.episodes}\nEp time: {self.avg_time} \
+            \nCover url:{self.img_url}'
 
 
     def get_avg_time(self):
@@ -150,29 +167,41 @@ def is_series(title):
 
 def main():
 
-    title_list = ['joker', 'terminator', 'peaky blinders', 'altered carbon', 'i am mother', 'gomorra']
+    title_list = ['gra o tron', 'joker', 'terminator', 'peaky blinders', 'altered carbon', 'i am mother', 'gomorra']
     # title_list = ['peaky blinders', 'altered carbon']
+
+    title = 'wounds'
+
+    test = Movie(title)
+    test.title_url = test.get_from_imdb(test.title)
+    test.get_soup_from_url()
+    test.get_avg_time()
+    test.get_cover()
+    test.get_rating()
+    print(test)
 
     output = []
     for title in title_list:
         series, soup = is_series(title)
         if series:
             s = Series(title)
-            s.get_from_imdb(s.title)
+            # s.get_from_imdb(s.title)
             #s.get_soup_from_url()
             s.soup_to_soup(soup)
             s.get_rating()
             s.get_avg_time()
             s.get_episodes()
             s.get_seasons()
+            s.get_cover()
             output.append(s)
         else:
             m = Movie(title)
-            m.get_from_imdb(m.title)
+            # m.get_from_imdb(m.title)
             # m.get_soup_from_url()
             m.soup_to_soup(soup)
             m.get_rating()
             m.get_avg_time()
+            m.get_cover()
             output.append(m)
 
     for o in output:

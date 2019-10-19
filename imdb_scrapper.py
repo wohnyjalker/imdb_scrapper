@@ -32,7 +32,7 @@ class Movie:
         search = get(title_to_find).text
         soup = BeautifulSoup(search, 'lxml')
         url = soup.find('td', {'result_text'}).a.get('href')
-        print(url)
+        #print(url)
         return Movie.IMDB_URL.format(url)
 
 

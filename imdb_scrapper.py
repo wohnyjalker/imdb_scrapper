@@ -76,8 +76,6 @@ class Movie:
             print(f"get_avg_time error:{e}")
             
 
-
-
     def get_cover(self):
         ''' zwraca url do okladki'''
         title_alt = self.title + ' Poster'
@@ -144,6 +142,7 @@ class Series(Movie):
             print(f"e: {e}")
             self.episodes = None
 
+            
 def is_series(title):
     '''sprawdza czy to film czy serial return tuple(Boolean, soup)
         ------------------------------------------

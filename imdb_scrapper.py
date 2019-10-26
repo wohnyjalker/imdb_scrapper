@@ -43,9 +43,9 @@ class Movie:
         try:
             temp = get(self.title_url).text
             self.soup = BeautifulSoup(temp, 'lxml')
-        except:
+        except Exception as e:
             self.soup = None
-            print("get soup error")
+            print(f"get soup error: {e}")
     
     def soup_to_soup(self, soup):
         self.soup = soup

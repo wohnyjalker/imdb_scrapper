@@ -9,5 +9,7 @@ python3 -m venv venv
 pip install -r requirements.txt    
 python3 imdb_scrapper.py    
 
-
+**BONUS**  
+Script with ProcessPoolExecutor  
+cover_downloader.py  
 
